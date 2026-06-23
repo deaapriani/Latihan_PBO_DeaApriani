@@ -1,7 +1,7 @@
 <?php
-// ==========================
+// ======================
 // KONEKSI DATABASE
-// ==========================
+// ======================
 $koneksi = new mysqli(
     "localhost",
     "root",
@@ -10,251 +10,204 @@ $koneksi = new mysqli(
 );
 
 if ($koneksi->connect_error) {
-    die("Koneksi Gagal : " . $koneksi->connect_error);
+    die("Koneksi gagal : " . $koneksi->connect_error);
 }
 
-// ==========================
-// ABSTRACT CLASS
-// ==========================
-abstract class Tiket
-{
-    protected $id_tiket;
-    protected $nama_film;
-    protected $jadwal_tayang;
-    protected $jumlah_kursi;
-    protected $hargaDasarTiket;
-
-    public function __construct(
-        $id_tiket,
-        $nama_film,
-        $jadwal_tayang,
-        $jumlah_kursi,
-        $hargaDasarTiket
-    ) {
-        $this->id_tiket = $id_tiket;
-        $this->nama_film = $nama_film;
-        $this->jadwal_tayang = $jadwal_tayang;
-        $this->jumlah_kursi = $jumlah_kursi;
-        $this->hargaDasarTiket = $hargaDasarTiket;
-    }
-
-    public function getNamaFilm()
-    {
-        return $this->nama_film;
-    }
-
-    public function getJadwal()
-    {
-        return $this->jadwal_tayang;
-    }
-
-    public function getJumlahKursi()
-    {
-        return $this->jumlah_kursi;
-    }
-
-    abstract public function hitungTotalHarga();
-    abstract public function tampilkanInfoFasilitas();
-}
-
-// ==========================
-// TIKET REGULAR
-// ==========================
-class TiketRegular extends Tiket
-{
-    protected $tipeAudio;
-    protected $lokasiBaris;
-
-    public function __construct(
-        $id_tiket,
-        $nama_film,
-        $jadwal_tayang,
-        $jumlah_kursi,
-        $hargaDasarTiket,
-        $tipeAudio,
-        $lokasiBaris
-    ) {
-        parent::__construct(
-            $id_tiket,
-            $nama_film,
-            $jadwal_tayang,
-            $jumlah_kursi,
-            $hargaDasarTiket
-        );
-
-        $this->tipeAudio = $tipeAudio;
-        $this->lokasiBaris = $lokasiBaris;
-    }
-
-    public function hitungTotalHarga()
-    {
-        return $this->jumlah_kursi *
-               $this->hargaDasarTiket;
-    }
-
-    public function tampilkanInfoFasilitas()
-    {
-        return "
-        Audio : {$this->tipeAudio}<br>
-        Baris : {$this->lokasiBaris}";
-    }
-}
-
-// ==========================
-// TIKET IMAX
-// ==========================
-class TiketIMAX extends Tiket
-{
-    protected $kacamata3dId;
-    protected $efekGerakFitur;
-
-    public function __construct(
-        $id_tiket,
-        $nama_film,
-        $jadwal_tayang,
-        $jumlah_kursi,
-        $hargaDasarTiket,
-        $kacamata3dId,
-        $efekGerakFitur
-    ) {
-        parent::__construct(
-            $id_tiket,
-            $nama_film,
-            $jadwal_tayang,
-            $jumlah_kursi,
-            $hargaDasarTiket
-        );
-
-        $this->kacamata3dId = $kacamata3dId;
-        $this->efekGerakFitur = $efekGerakFitur;
-    }
-
-    public function hitungTotalHarga()
-    {
-        return ($this->jumlah_kursi *
-                $this->hargaDasarTiket)
-                + 35000;
-    }
-
-    public function tampilkanInfoFasilitas()
-    {
-        return "
-        Kacamata 3D : {$this->kacamata3dId}<br>
-        Efek Gerak : {$this->efekGerakFitur}";
-    }
-}
-
-// ==========================
-// TIKET VELVET
-// ==========================
-class TiketVelvet extends Tiket
-{
-    protected $bantalSelimutPack;
-    protected $layananButler;
-
-    public function __construct(
-        $id_tiket,
-        $nama_film,
-        $jadwal_tayang,
-        $jumlah_kursi,
-        $hargaDasarTiket,
-        $bantalSelimutPack,
-        $layananButler
-    ) {
-        parent::__construct(
-            $id_tiket,
-            $nama_film,
-            $jadwal_tayang,
-            $jumlah_kursi,
-            $hargaDasarTiket
-        );
-
-        $this->bantalSelimutPack = $bantalSelimutPack;
-        $this->layananButler = $layananButler;
-    }
-
-    public function hitungTotalHarga()
-    {
-        return ($this->jumlah_kursi *
-                $this->hargaDasarTiket)
-                * 1.50;
-    }
-
-    public function tampilkanInfoFasilitas()
-    {
-        return "
-        Bantal & Selimut : {$this->bantalSelimutPack}<br>
-        Butler : {$this->layananButler}";
-    }
-}
-
-// ==========================
-// AMBIL DATA DATABASE
-// ==========================
-$query = mysqli_query(
-    $koneksi,
-    "SELECT * FROM tabel_tiket"
+// ======================
+// HITUNG JUMLAH STUDIO
+// ======================
+$total = mysqli_num_rows(
+    mysqli_query($koneksi, "SELECT * FROM tabel_tiket")
 );
 
-$total = mysqli_num_rows($query);
+$regular = mysqli_num_rows(
+    mysqli_query(
+        $koneksi,
+        "SELECT * FROM tabel_tiket
+         WHERE jenis_studio='Regular'"
+    )
+);
+
+$imax = mysqli_num_rows(
+    mysqli_query(
+        $koneksi,
+        "SELECT * FROM tabel_tiket
+         WHERE jenis_studio='IMAX'"
+    )
+);
+
+$velvet = mysqli_num_rows(
+    mysqli_query(
+        $koneksi,
+        "SELECT * FROM tabel_tiket
+         WHERE jenis_studio='Velvet'"
+    )
+);
+
+// ======================
+// AMBIL DATA TIKET
+// ======================
+$data = mysqli_query(
+    $koneksi,
+    "SELECT * FROM tabel_tiket
+     ORDER BY jenis_studio"
+);
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Sistem Manajemen Tiket Bioskop</title>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
 
-    <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet">
+<title>CinemaRiani</title>
 
-    <style>
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
 
-        body{
-            background:
-            linear-gradient(
-                135deg,
-                #dbeafe,
-                #bfdbfe,
-                #93c5fd
-            );
-            min-height:100vh;
-        }
+<style>
 
-        .header-card{
-            background:
-            linear-gradient(
-                90deg,
-                #1e40af,
-                #2563eb,
-                #60a5fa
-            );
-            border-radius:25px;
-        }
+body{
+    min-height:100vh;
+    font-family:'Segoe UI',sans-serif;
 
-        .stat-card,
-        .ticket-card{
-            border:none;
-            border-radius:20px;
-            box-shadow:
-            0 5px 20px
-            rgba(0,0,0,0.15);
-        }
+    background:
+    linear-gradient(
+        rgba(5,20,50,0.75),
+        rgba(5,20,50,0.75)
+    ),
+    url('assets/riri.jpg');
 
-        .ticket-card{
-            transition:0.3s;
-        }
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
 
-        .ticket-card:hover{
-            transform:translateY(-8px);
-        }
+    color:white;
+}
 
-        .section-title{
-            color:#1e3a8a;
-            font-weight:bold;
-        }
+/* efek kaca */
+.glass{
+    background:
+    rgba(255,255,255,0.08);
 
-    </style>
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    border:
+    1px solid
+    rgba(255,255,255,0.15);
+
+    border-radius:25px;
+
+    box-shadow:
+    0 8px 32px
+    rgba(0,0,0,0.3);
+}
+
+/* judul */
+.logo{
+    font-size:45px;
+    font-weight:bold;
+    color:#7dd3fc;
+
+    text-shadow:
+    0 0 15px
+    rgba(125,211,252,0.8);
+}
+
+/* statistik */
+.stat-card{
+    background:
+    rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(20px);
+
+    border:
+    1px solid
+    rgba(125,211,252,0.3);
+
+    border-radius:20px;
+
+    transition:0.4s;
+}
+
+.stat-card:hover{
+    transform:translateY(-10px);
+
+    box-shadow:
+    0 0 25px
+    rgba(125,211,252,0.5);
+}
+
+/* tiket */
+.ticket-card{
+    background:
+    rgba(255,255,255,0.08);
+
+    backdrop-filter:blur(20px);
+
+    border:
+    1px solid
+    rgba(125,211,252,0.25);
+
+    border-radius:20px;
+
+    transition:0.4s;
+}
+
+.ticket-card:hover{
+    transform:scale(1.03);
+
+    box-shadow:
+    0 0 30px
+    rgba(96,165,250,0.5);
+}
+
+/* badge studio */
+.badge-studio{
+    background:
+    linear-gradient(
+        90deg,
+        #2563eb,
+        #38bdf8
+    );
+
+    padding:10px;
+    border-radius:12px;
+
+    font-weight:bold;
+    text-align:center;
+}
+
+/* total */
+.total{
+    background:
+    rgba(37,99,235,0.2);
+
+    border:
+    1px solid
+    rgba(125,211,252,0.3);
+
+    border-radius:15px;
+
+    padding:12px;
+
+    color:#bfdbfe;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.info-box{
+    background:
+    rgba(255,255,255,0.05);
+
+    border-radius:15px;
+    padding:15px;
+}
+
+</style>
 </head>
 
 <body>
@@ -262,150 +215,197 @@ $total = mysqli_num_rows($query);
 <div class="container py-5">
 
     <!-- HEADER -->
-    <div class="card header-card shadow-lg mb-5">
-        <div class="card-body text-center text-white p-5">
-            <h1>🎬 Sistem Manajemen Tiket Bioskop</h1>
-            <h5>
-                Kelola Tiket dan Fasilitas Studio Bioskop
-            </h5>
-        </div>
+    <div class="glass p-4 mb-5">
+        <h1 class="logo">
+            🎬 CinemaRiani
+        </h1>
     </div>
 
     <!-- STATISTIK -->
-    <div class="row mb-5">
+    <div class="glass p-5 mb-5">
 
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body text-center">
-                    <h5>Total Tiket</h5>
-                    <h2><?= $total ?></h2>
+        <h2 class="mb-4">
+            🎬 Sistem Manajemen Tiket Bioskop
+        </h2>
+
+        <div class="row">
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4 text-center">
+                    <h4>🎟️ Tiket</h4>
+                    <h1><?= $total ?></h1>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body text-center">
-                    <h5>Regular</h5>
-                    <h2>🎫</h2>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4 text-center">
+                    <h4>🍿 Regular</h4>
+                    <h1><?= $regular ?></h1>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body text-center">
-                    <h5>IMAX</h5>
-                    <h2>🎥</h2>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4 text-center">
+                    <h4>🎥 IMAX</h4>
+                    <h1><?= $imax ?></h1>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body text-center">
-                    <h5>Velvet</h5>
-                    <h2>🛋️</h2>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4 text-center">
+                    <h4>🛋️ Velvet</h4>
+                    <h1><?= $velvet ?></h1>
                 </div>
             </div>
+
         </div>
 
     </div>
 
-    <h2 class="section-title mb-4">
-        🎫 Daftar Tiket Penonton
-    </h2>
+    <!-- DAFTAR TIKET -->
+    <div class="glass p-4 mb-4">
+        <h2>
+            🎬 Daftar Tiket &
+            Fasilitas Studio
+        </h2>
+    </div>
 
     <div class="row">
 
-        <?php
-        mysqli_data_seek($query,0);
-
-        while($row = mysqli_fetch_assoc($query))
-        {
-            if($row['jenis_studio']=="Regular")
-            {
-                $tiket = new TiketRegular(
-                    $row['id_tiket'],
-                    $row['nama_film'],
-                    $row['jadwal_tayang'],
-                    $row['jumlah_kursi'],
-                    $row['harga_dasar_tiket'],
-                    $row['tipe_audio'],
-                    $row['lokasi_baris']
-                );
-
-                $warna = "primary";
-            }
-            elseif($row['jenis_studio']=="IMAX")
-            {
-                $tiket = new TiketIMAX(
-                    $row['id_tiket'],
-                    $row['nama_film'],
-                    $row['jadwal_tayang'],
-                    $row['jumlah_kursi'],
-                    $row['harga_dasar_tiket'],
-                    $row['kacamata_3d_id'],
-                    $row['efek_gerak_fitur']
-                );
-
-                $warna = "info";
-            }
-            else
-            {
-                $tiket = new TiketVelvet(
-                    $row['id_tiket'],
-                    $row['nama_film'],
-                    $row['jadwal_tayang'],
-                    $row['jumlah_kursi'],
-                    $row['harga_dasar_tiket'],
-                    $row['bantal_selimut_pack'],
-                    $row['layanan_butler']
-                );
-
-                $warna = "dark";
-            }
-        ?>
+    <?php while($row = mysqli_fetch_assoc($data)){ ?>
 
         <div class="col-md-4 mb-4">
 
-            <div class="card ticket-card h-100">
+            <div class="ticket-card p-4 h-100">
 
-                <div class="card-header bg-<?= $warna ?> text-white">
+                <div class="badge-studio mb-4">
                     <?= $row['jenis_studio']; ?>
                 </div>
 
-                <div class="card-body">
+                <h3>
+                    🎬
+                    <?= $row['nama_film']; ?>
+                </h3>
 
-                    <h4>
-                        🎬 <?= $tiket->getNamaFilm(); ?>
-                    </h4>
+                <hr>
 
-                    <hr>
+                <p>
+                    <b>ID Tiket :</b>
+                    <?= $row['id_tiket']; ?>
+                </p>
 
-                    <p>
-                        <b>Jadwal :</b><br>
-                        <?= $tiket->getJadwal(); ?>
-                    </p>
+                <p>
+                    <b>Jadwal :</b><br>
+                    <?= $row['jadwal_tayang']; ?>
+                </p>
 
-                    <p>
-                        <b>Jumlah Kursi :</b><br>
-                        <?= $tiket->getJumlahKursi(); ?>
-                    </p>
+                <p>
+                    <b>Jumlah Kursi :</b>
+                    <?= $row['jumlah_kursi']; ?>
+                </p>
 
-                    <p>
-                        <b>Fasilitas :</b><br>
-                        <?= $tiket->tampilkanInfoFasilitas(); ?>
-                    </p>
+                <p>
+                    <b>Harga Dasar :</b>
+                    Rp
+                    <?= number_format(
+                        $row['harga_dasar_tiket'],
+                        0,
+                        ',',
+                        '.'
+                    ); ?>
+                </p>
 
-                    <h5 class="text-primary">
-                        Rp <?= number_format(
-                            $tiket->hitungTotalHarga(),
-                            0,
-                            ',',
-                            '.'
-                        ); ?>
-                    </h5>
+                <div class="info-box mb-3">
+                    <b>Fasilitas :</b><br><br>
+
+                    <?php
+                    if(
+                        $row['jenis_studio']
+                        == 'Regular'
+                    ){
+                        echo
+                        "Audio :
+                        ".$row['tipe_audio']
+                        ."<br>";
+
+                        echo
+                        "Baris :
+                        ".$row['lokasi_baris'];
+                    }
+
+                    elseif(
+                        $row['jenis_studio']
+                        == 'IMAX'
+                    ){
+                        echo
+                        "Kacamata 3D :
+                        ".$row['kacamata_3d_id']
+                        ."<br>";
+
+                        echo
+                        "Efek Gerak :
+                        ".$row['efek_gerak_fitur'];
+                    }
+
+                    else{
+                        echo
+                        "Bantal & Selimut :
+                        ".$row['bantal_selimut_pack']
+                        ."<br>";
+
+                        echo
+                        "Layanan Butler :
+                        ".$row['layanan_butler'];
+                    }
+                    ?>
+
+                </div>
+
+                <?php
+                if(
+                    $row['jenis_studio']
+                    == 'Regular'
+                ){
+                    $totalHarga =
+                    $row['jumlah_kursi']
+                    *
+                    $row['harga_dasar_tiket'];
+                }
+
+                elseif(
+                    $row['jenis_studio']
+                    == 'IMAX'
+                ){
+                    $totalHarga =
+                    (
+                        $row['jumlah_kursi']
+                        *
+                        $row['harga_dasar_tiket']
+                    )
+                    + 35000;
+                }
+
+                else{
+                    $totalHarga =
+                    (
+                        $row['jumlah_kursi']
+                        *
+                        $row['harga_dasar_tiket']
+                    )
+                    * 1.5;
+                }
+                ?>
+
+                <div class="total text-center">
+
+                    Total Harga :
+                    Rp
+                    <?= number_format(
+                        $totalHarga,
+                        0,
+                        ',',
+                        '.'
+                    ); ?>
 
                 </div>
 
@@ -413,7 +413,7 @@ $total = mysqli_num_rows($query);
 
         </div>
 
-        <?php } ?>
+    <?php } ?>
 
     </div>
 
